@@ -32,6 +32,14 @@ int main(int argc, char **argv)
 	PetscOptionsGetScalar(NULL,NULL,"-p",&p,NULL);
 	PetscOptionsGetScalar(NULL,NULL,"-c",&c,NULL);
                 PetscOptionsGetScalar(NULL,NULL,"-k",&k,NULL);
+/*
+      定义向量与矩阵的各种系数
+*/
+
+	size 		  = 1/dx;
+	iteration_num = 1/dt;
+	lambda   	  = k*dt/(p*c*dx*dx);
+	gamma 		  = dt/(p*c);
 
 /*
       初始化向量
