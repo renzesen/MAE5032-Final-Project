@@ -40,32 +40,32 @@ int main(int argc, char **argv)
 
 	size 		  = 1/dx+1;
 	iteration_num = 1/dt+1;
-	a   	  = k*dt/(ro*c*dx*dx);
-	b 		  = dt/(ro*c);
-                PetscPrintf(PETSC_COMM_WORLD,"a =  %g, b = %g\n", a, b);
+	a   	  = -k*dt/(ro*c*dx*dx);
+	b 		  = -dt/(ro*c);
+
 /*
       初始化向量
 */
 
-	PetscCall(VecCreate(PETSC_COMM_WORLD,&u_n));
-	PetscCall(VecSetSizes(u_n,PETSC_DECIDE,size));
-	PetscCall(VecSetFromOptions(u_n));
-	PetscCall(VecDuplicate(u_n,&u_n+1));
-	PetscCall(VecDuplicate(u_n+1,&f));
+	PetscCall(VecCreate(PETSC_COMM_WORLD,&u_n+1));
+	PetscCall(VecSetSizes(u_n+1,PETSC_DECIDE,size));
+	PetscCall(VecSetFromOptions(u_n+1));
+	PetscCall(VecDuplicate(u_n+1,&u_n));
+	PetscCall(VecDuplicate(u_n,&f));
 
 /*
-      设置u_n
+      设置u_n+1
 */	
 
-	// PetscCall(VecGetOwnershipRange(u_n, &Istart, &Iend));
+	// PetscCall(VecGetOwnershipRange(u_n+1, &Istart, &Iend));
 	for (i=1; i<size-1; i++)
                 {
 		val = exp(i*dx);
-		PetscCall(VecSetValues(u_n,1,&i,&val,INSERT_VALUES));
+		PetscCall(VecSetValues(u_n+1,1,&i,&val,INSERT_VALUES));
 	}
-	PetscCall(VecAssemblyBegin(u_n));
-                PetscCall(VecAssemblyEnd(u_n));
-	// PetscCall(VecView(u_n,PETSC_VIEWER_STDOUT_WORLD));
+	PetscCall(VecAssemblyBegin(u_n+1));
+                PetscCall(VecAssemblyEnd(u_n+1));
+	// PetscCall(VecView(u_n+1,PETSC_VIEWER_STDOUT_WORLD));
 
 /*
        设置f
@@ -123,25 +123,24 @@ int main(int argc, char **argv)
 	// PetscCall(MatView(A,PETSC_VIEWER_STDOUT_WORLD));
 	
 	
-	
 /*
-        显示计算 
+        隐式计算 
 */  
 
                 for(i=0;i<iteration_num;i++)
                 {
-                                PetscCall(MatMult(A,u_n,u_n+1));
-                                PetscCall(VecScale(u_n+1,a));
-                                PetscCall(VecAXPY(u_n+1,b,f));
-                                PetscCall(VecAXPY(u_n+1,1.0,u_n));
-		PetscCall(VecSetValue(u_n+1,0,0.0,INSERT_VALUES));
-		PetscCall(VecSetValue(u_n+1,size-1,0.0,INSERT_VALUES));
-		PetscCall(VecAssemblyBegin(u_n+1));
-		PetscCall(VecAssemblyEnd(u_n+1));
+		PetscCall(MatMult(A,u_n+1,u_n));
+                                PetscCall(VecScale(u_n,a));
+                                PetscCall(VecAXPY(u_n,b,f));
+                                PetscCall(VecAXPY(u_n,1.0,u_n+1));
+		PetscCall(VecSetValue(u_n,0,0.0,INSERT_VALUES));
+		PetscCall(VecSetValue(u_n,size-1,0.0,INSERT_VALUES));
+		PetscCall(VecAssemblyBegin(u_n));
+		PetscCall(VecAssemblyEnd(u_n));
 
-		PetscCall(VecCopy(u_n+1,u_n));
+		PetscCall(VecCopy(u_n,u_n+1));
 	}
-	PetscCall(VecView(u_n+1,PETSC_VIEWER_STDOUT_WORLD));
+	PetscCall(VecView(u_n,PETSC_VIEWER_STDOUT_WORLD));
 
 
 	PetscPrintf(PETSC_COMM_WORLD,"size =  %D\n", size);
