@@ -93,6 +93,23 @@ int main(int argc, char **argv)
 
 	PetscCall(MatGetOwnershipRange(A,&Istart,&Iend));
 
+	if (!Istart) 
+                {
+                Istart = 1;
+                i      = 0; col[0] = 0; col[1] = 1; value[0] = one-2.0*a; value[1] = a;
+                PetscCall(MatSetValues(A,1,&i,2,col,value,INSERT_VALUES));
+                }
+                    
+                if (Iend == size)
+                {
+                Iend = size-1;
+                i    = size-1; col[0] = size-2; col[1] = size-1; value[0] = a; value[1] = 1.0-2.0*a;
+                PetscCall(MatSetValues(A,1,&i,2,col,value,INSERT_VALUES));
+                }
+
+/*
+        除了两行特判之外其他都符合一行三个元素 
+*/    
          
                 value[0] = a; value[1] = one-2.0*a; value[2] = a;
                 for (i=Istart; i<Iend; i++)
